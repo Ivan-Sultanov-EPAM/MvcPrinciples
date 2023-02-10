@@ -13,17 +13,14 @@ namespace Northwind.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly NorthwindContext _dbContext;
 
-        public HomeController(ILogger<HomeController> logger, NorthwindContext dbContext)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _dbContext = dbContext;
         }
 
         public IActionResult Index()
         {
-            var result = _dbContext.Products.ToList();
             return View();
         }
 
