@@ -5,11 +5,6 @@ namespace Northwind.Models
 {
     public class Products
     {
-        public Products()
-        {
-            OrderDetails = new HashSet<OrderDetails>();
-        }
-
         public int ProductId { get; set; }
 
         [Required]

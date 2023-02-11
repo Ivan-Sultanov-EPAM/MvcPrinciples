@@ -46,7 +46,6 @@ namespace Northwind.Controllers
         }
         
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description,Picture")] Categories categories)
         {
             if (ModelState.IsValid)
@@ -74,7 +73,6 @@ namespace Northwind.Controllers
         }
         
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CategoryId,CategoryName,Description,Picture")] Categories categories)
         {
             if (id != categories.CategoryId)
