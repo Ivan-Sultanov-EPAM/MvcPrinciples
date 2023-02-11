@@ -18,7 +18,9 @@ namespace Northwind.Controllers
         
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categories.ToListAsync());
+            return View(await _context.Categories
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync());
         }
         
         public async Task<IActionResult> Details(int? id)
@@ -101,33 +103,6 @@ namespace Northwind.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(categories);
-        }
-        
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var categories = await _context.Categories
-                .FirstOrDefaultAsync(m => m.CategoryId == id);
-            if (categories == null)
-            {
-                return NotFound();
-            }
-
-            return View(categories);
-        }
-        
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var categories = await _context.Categories.FindAsync(id);
-            _context.Categories.Remove(categories);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
 
         private bool CategoriesExists(int id)
