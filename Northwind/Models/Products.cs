@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-
-// Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
-// If you have enabled NRTs for your project, then un-comment the following line:
-// #nullable disable
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Northwind.Models
 {
-    public partial class Products
+    public class Products
     {
         public Products()
         {
@@ -15,11 +11,23 @@ namespace Northwind.Models
         }
 
         public int ProductId { get; set; }
+
+        [Required]
+        [StringLength(25)]
         public string ProductName { get; set; }
         public int? SupplierId { get; set; }
         public int? CategoryId { get; set; }
+        
+        [Required]
+        [StringLength(25)]
         public string QuantityPerUnit { get; set; }
+
+        [Required]
+        [Range(0.01, 10000)]
         public decimal? UnitPrice { get; set; }
+
+        [Required]
+        [Range(0, short.MaxValue)]
         public short? UnitsInStock { get; set; }
         public short? UnitsOnOrder { get; set; }
         public short? ReorderLevel { get; set; }
