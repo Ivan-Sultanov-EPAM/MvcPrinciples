@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Northwind.Configuration;
 using Northwind.Data;
 
 namespace Northwind
@@ -19,10 +20,13 @@ namespace Northwind
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            var appSettings = new AppSettings();
+            Configuration.Bind(appSettings);
 
+            services.AddControllersWithViews();
+            services.AddSingleton(appSettings);
             services.AddDbContext<NorthwindContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("NorthwindDb")));
+                options.UseSqlServer(appSettings.ConnectionString));
         }
         
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

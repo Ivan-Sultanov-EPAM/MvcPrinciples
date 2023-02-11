@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Northwind.Configuration;
 using Northwind.Data;
 using Northwind.Models;
 
@@ -13,21 +12,25 @@ namespace Northwind.Controllers
     public class ProductsController : Controller
     {
         private readonly NorthwindContext _context;
+        private readonly AppSettings _appSettings;
 
-        public ProductsController(NorthwindContext context)
+        public ProductsController(NorthwindContext context, AppSettings appSettings)
         {
             _context = context;
+            _appSettings = appSettings;
         }
-
-        // GET: Products
+        
         public async Task<IActionResult> Index()
         {
-            var northwindContext = _context.Products
-                .Include(p => p.Category).Include(p => p.Supplier);
-            return View(await northwindContext.ToListAsync());
-        }
+            var data = _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Supplier);
 
-        // GET: Products/Details/5
+            return _appSettings.MaxProductsToShow > 0
+                ? View(await data.Take(_appSettings.MaxProductsToShow).ToListAsync())
+                : View(await data.ToListAsync());
+        }
+        
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -39,6 +42,7 @@ namespace Northwind.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
+
             if (products == null)
             {
                 return NotFound();
@@ -46,18 +50,14 @@ namespace Northwind.Controllers
 
             return View(products);
         }
-
-        // GET: Products/Create
+        
         public IActionResult Create()
         {
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName");
             return View();
         }
-
-        // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ProductId,ProductName,SupplierId,CategoryId,QuantityPerUnit,UnitPrice,UnitsInStock,UnitsOnOrder,ReorderLevel,Discontinued")] Products products)
@@ -72,8 +72,7 @@ namespace Northwind.Controllers
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", products.SupplierId);
             return View(products);
         }
-
-        // GET: Products/Edit/5
+        
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -86,14 +85,12 @@ namespace Northwind.Controllers
             {
                 return NotFound();
             }
+
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", products.CategoryId);
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", products.SupplierId);
             return View(products);
         }
-
-        // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,SupplierId,CategoryId,QuantityPerUnit,UnitPrice,UnitsInStock,UnitsOnOrder,ReorderLevel,Discontinued")] Products products)
@@ -123,12 +120,12 @@ namespace Northwind.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", products.CategoryId);
             ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", products.SupplierId);
             return View(products);
         }
-
-        // GET: Products/Delete/5
+        
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -140,6 +137,7 @@ namespace Northwind.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.Supplier)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
+
             if (products == null)
             {
                 return NotFound();
@@ -147,15 +145,17 @@ namespace Northwind.Controllers
 
             return View(products);
         }
-
-        // POST: Products/Delete/5
+        
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var products = await _context.Products.FindAsync(id);
+
             _context.Products.Remove(products);
+
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
