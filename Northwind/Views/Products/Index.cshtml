@@ -74,9 +74,15 @@
                 @Html.DisplayFor(modelItem => item.Supplier.CompanyName)
             </td>
             <td class="col-sm-2">
-                <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ProductId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a>
+                </div>
+                <div>
+                    <a style="color:green" asp-action="Details" asp-route-id="@item.ProductId">Details</a>
+                </div>
+                <div>
+                    <a style="color:red" asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
+                </div>
             </td>
         </tr>
 }
