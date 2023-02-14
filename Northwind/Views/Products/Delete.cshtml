@@ -1,4 +1,4 @@
-﻿@model Northwind.Entities.Product
+﻿@model Northwind.Application.Models.Responses.ProductDto
 
 @{
     ViewData["Title"] = "Delete";
@@ -58,13 +58,13 @@
             Category
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category.CategoryName)
+            @Html.DisplayFor(model => model.CategoryName)
         </dd>
         <dt class="col-sm-2">
             Supplier
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Supplier.CompanyName)
+            @Html.DisplayFor(model => model.CompanyName)
         </dd>
     </dl>
     

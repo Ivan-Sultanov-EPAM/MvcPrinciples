@@ -1,11 +1,13 @@
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Northwind.Configuration;
 using Northwind.Data;
+using System.Reflection;
 
 namespace Northwind
 {
@@ -17,18 +19,19 @@ namespace Northwind
         }
 
         public IConfiguration Configuration { get; }
-        
+
         public void ConfigureServices(IServiceCollection services)
         {
             var appSettings = new AppSettings();
             Configuration.Bind(appSettings);
 
             services.AddControllersWithViews();
+            services.AddMediatR(typeof(Startup).GetTypeInfo().Assembly);
             services.AddSingleton(appSettings);
             services.AddDbContext<NorthwindContext>(options =>
                 options.UseSqlServer(appSettings.ConnectionString));
         }
-        
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, NorthwindContext dbContext)
         {
             dbContext.Database.Migrate();

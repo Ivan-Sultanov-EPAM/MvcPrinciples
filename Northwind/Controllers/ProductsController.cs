@@ -1,48 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+using Northwind.Application.Commands.Products;
+using Northwind.Application.Models.Requests;
+using Northwind.Application.Models.Responses;
+using Northwind.Application.Queries.Categories;
+using Northwind.Application.Queries.Products;
+using Northwind.Application.Queries.Suppliers;
 using Northwind.Configuration;
-using Northwind.Data;
-using Northwind.Entities;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Northwind.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly NorthwindContext _context;
         private readonly AppSettings _appSettings;
+        private readonly IMediator _mediator;
 
-        public ProductsController(NorthwindContext context, AppSettings appSettings)
+        public ProductsController(AppSettings appSettings, IMediator mediator)
         {
-            _context = context;
             _appSettings = appSettings;
+            _mediator = mediator;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<ProductDto>>> Index()
         {
-            var data = _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Supplier)
-                .OrderBy(p => p.ProductName);
-
-            return _appSettings.MaxProductsToShow > 0
-                ? View(await data.Take(_appSettings.MaxProductsToShow).ToListAsync())
-                : View(await data.ToListAsync());
+            return View(await _mediator
+                .Send(new GetProductsQuery(0, _appSettings.MaxProductsToShow, null)));
         }
 
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var products = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Supplier)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+            var products = await _mediator
+                .Send(new GetProductByIdQuery(id));
 
             if (products == null)
             {
@@ -52,115 +43,105 @@ namespace Northwind.Controllers
             return View(products);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName");
-            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName");
+            var categories = await _mediator.Send(new GetCategoriesQuery());
+            var suppliers = await _mediator.Send(new GetSuppliersQuery());
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "CategoryName");
+            ViewData["SupplierId"] = new SelectList(suppliers, "SupplierId", "CompanyName");
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([Bind("ProductId,ProductName,SupplierId,CategoryId,QuantityPerUnit,UnitPrice,UnitsInStock,UnitsOnOrder,ReorderLevel,Discontinued")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,ProductName,SupplierId,CategoryId,QuantityPerUnit,UnitPrice,UnitsInStock,UnitsOnOrder,ReorderLevel,Discontinued")] AddProductRequestDto productDto)
         {
+            var categories = await _mediator.Send(new GetCategoriesQuery());
+            var suppliers = await _mediator.Send(new GetSuppliersQuery());
+
             if (ModelState.IsValid)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
+                await _mediator
+                    .Send(new AddProductCommand(productDto));
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
-            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", product.SupplierId);
-            return View(product);
+
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "CategoryName", productDto.CategoryId);
+            ViewData["SupplierId"] = new SelectList(suppliers, "SupplierId", "CompanyName", productDto.SupplierId);
+            return View(productDto);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            var categories = await _mediator.Send(new GetCategoriesQuery());
+            var suppliers = await _mediator.Send(new GetSuppliersQuery());
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _mediator
+                .Send(new GetProductByIdQuery(id));
+
             if (product == null)
             {
                 return NotFound();
             }
 
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
-            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", product.SupplierId);
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "CategoryName", product.CategoryId);
+            ViewData["SupplierId"] = new SelectList(suppliers, "SupplierId", "CompanyName", product.SupplierId);
             return View(product);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,SupplierId,CategoryId,QuantityPerUnit,UnitPrice,UnitsInStock,UnitsOnOrder,ReorderLevel,Discontinued")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,ProductName,SupplierId,CategoryId,QuantityPerUnit,UnitPrice,UnitsInStock,UnitsOnOrder,ReorderLevel,Discontinued")] ProductDto productDto)
         {
-            if (id != product.ProductId)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    await _mediator
+                        .Send(new EditProductCommand(id, productDto));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (KeyNotFoundException e)
                 {
-                    if (!ProductsExists(product.ProductId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound(e.Message);
                 }
+
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryName", product.CategoryId);
-            ViewData["SupplierId"] = new SelectList(_context.Suppliers, "SupplierId", "CompanyName", product.SupplierId);
-            return View(product);
+            var categories = await _mediator.Send(new GetCategoriesQuery());
+            var suppliers = await _mediator.Send(new GetSuppliersQuery());
+
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "CategoryName", productDto.CategoryId);
+            ViewData["SupplierId"] = new SelectList(suppliers, "SupplierId", "CompanyName", productDto.SupplierId);
+            return View(productDto);
         }
 
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null)
+            var product = await _mediator
+                .Send(new GetProductByIdQuery(id));
+
+            if (product == null)
             {
                 return NotFound();
             }
 
-            var products = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Supplier)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
-
-            if (products == null)
-            {
-                return NotFound();
-            }
-
-            return View(products);
+            return View(product);
         }
 
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var products = await _context.Products.FindAsync(id);
-
-            _context.Products.Remove(products);
-
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _mediator
+                    .Send(new DeleteProductCommand(id));
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
 
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ProductsExists(int id)
-        {
-            return _context.Products.Any(e => e.ProductId == id);
         }
     }
 }
