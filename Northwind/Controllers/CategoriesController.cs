@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Northwind.Data;
-using Northwind.Models;
+using Northwind.Entities;
 
 namespace Northwind.Controllers
 {
@@ -46,7 +46,7 @@ namespace Northwind.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description,Picture")] Categories categories)
+        public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description,Picture")] Category categories)
         {
             if (ModelState.IsValid)
             {
@@ -73,7 +73,7 @@ namespace Northwind.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, [Bind("CategoryId,CategoryName,Description,Picture")] Categories categories)
+        public async Task<IActionResult> Edit(int id, [Bind("CategoryId,CategoryName,Description,Picture")] Category categories)
         {
             if (id != categories.CategoryId)
             {

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Northwind.Models
+namespace Northwind.Entities
 {
-    public class Categories
+    public class Category
     {
         public int CategoryId { get; set; }
 
@@ -11,6 +11,6 @@ namespace Northwind.Models
         public string CategoryName { get; set; }
         public string Description { get; set; }
         public byte[] Picture { get; set; }
-        public virtual ICollection<Products> Products { get; set; }
+        public virtual ICollection<Product> Products { get; set; }
     }
 }

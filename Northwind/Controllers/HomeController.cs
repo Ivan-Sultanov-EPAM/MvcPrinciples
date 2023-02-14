@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Northwind.Models;
 using System.Diagnostics;
+using Northwind.Entities;
 
 namespace Northwind.Controllers
 {

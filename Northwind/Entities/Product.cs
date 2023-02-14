@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Northwind.Models
+namespace Northwind.Entities
 {
-    public class Products
+    public class Product
     {
         public int ProductId { get; set; }
 
@@ -12,7 +12,7 @@ namespace Northwind.Models
         public string ProductName { get; set; }
         public int? SupplierId { get; set; }
         public int? CategoryId { get; set; }
-        
+
         [Required]
         [StringLength(25)]
         public string QuantityPerUnit { get; set; }
@@ -28,7 +28,7 @@ namespace Northwind.Models
         public short? ReorderLevel { get; set; }
         public bool Discontinued { get; set; }
 
-        public virtual Categories Category { get; set; }
+        public virtual Category Category { get; set; }
         public virtual Suppliers Supplier { get; set; }
         public virtual ICollection<OrderDetails> OrderDetails { get; set; }
     }
