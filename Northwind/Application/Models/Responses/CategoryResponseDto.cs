@@ -1,6 +1,6 @@
 ﻿namespace Northwind.Application.Models.Responses
 {
-    public class CategoryResponseDto
+    public class CategoryDto
     {
         public int CategoryId { get; set; }
         public string CategoryName { get; set; }

@@ -3,7 +3,7 @@ using Northwind.Application.Models.Responses;
 
 namespace Northwind.Application.Queries.Categories
 {
-    public class GetCategoryByIdQuery : IRequest<CategoryResponseDto>
+    public class GetCategoryByIdQuery : IRequest<CategoryDto>
     {
         public int CategoryId { get; }
 

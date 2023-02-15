@@ -1,111 +1,91 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Northwind.Data;
-using Northwind.Entities;
+using Northwind.Application.Commands.Categories;
+using Northwind.Application.Models.Requests;
+using Northwind.Application.Models.Responses;
+using Northwind.Application.Queries.Categories;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Northwind.Controllers
 {
     public class CategoriesController : Controller
     {
-        private readonly NorthwindContext _context;
+        private readonly IMediator _mediator;
 
-        public CategoriesController(NorthwindContext context)
+        public CategoriesController(IMediator mediator)
         {
-            _context = context;
+            _mediator = mediator;
         }
-        
+
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categories
-                .OrderBy(c => c.CategoryName)
-                .ToListAsync());
+            return View(await _mediator
+                .Send(new GetCategoriesQuery()));
         }
-        
-        public async Task<IActionResult> Details(int? id)
+
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
+            var category = await _mediator
+                .Send(new GetCategoryByIdQuery(id));
+
+            if (category == null)
             {
                 return NotFound();
             }
 
-            var categories = await _context.Categories
-                .FirstOrDefaultAsync(m => m.CategoryId == id);
-            if (categories == null)
-            {
-                return NotFound();
-            }
-
-            return View(categories);
+            return View(category);
         }
-        
+
         public IActionResult Create()
         {
             return View();
         }
-        
+
         [HttpPost]
-        public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description,Picture")] Category categories)
+        public async Task<IActionResult> Create([Bind("CategoryId,CategoryName,Description,Picture")] AddCategoryRequestDto categoryDto)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(categories);
-                await _context.SaveChangesAsync();
+                await _mediator
+                    .Send(new AddCategoryCommand(categoryDto));
                 return RedirectToAction(nameof(Index));
             }
-            return View(categories);
+
+            return View(categoryDto);
         }
-        
-        public async Task<IActionResult> Edit(int? id)
+
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null)
+            var category = await _mediator
+                .Send(new GetCategoryByIdQuery(id));
+
+            if (category == null)
             {
                 return NotFound();
             }
 
-            var categories = await _context.Categories.FindAsync(id);
-            if (categories == null)
-            {
-                return NotFound();
-            }
-            return View(categories);
+            return View(category);
         }
-        
+
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, [Bind("CategoryId,CategoryName,Description,Picture")] Category categories)
+        public async Task<IActionResult> Edit(int id, [Bind("CategoryId,CategoryName,Description,Picture")] CategoryDto categoryDto)
         {
-            if (id != categories.CategoryId)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(categories);
-                    await _context.SaveChangesAsync();
+                    await _mediator
+                        .Send(new EditCategoryCommand(id, categoryDto));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (KeyNotFoundException e)
                 {
-                    if (!CategoriesExists(categories.CategoryId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound(e.Message);
                 }
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(categories);
-        }
-
-        private bool CategoriesExists(int id)
-        {
-            return _context.Categories.Any(e => e.CategoryId == id);
+            return View(categoryDto);
         }
     }
 }

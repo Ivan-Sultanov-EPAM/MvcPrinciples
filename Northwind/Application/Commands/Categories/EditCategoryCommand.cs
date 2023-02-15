@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Northwind.Application.Models.Requests;
+using Northwind.Application.Models.Responses;
 
 namespace Northwind.Application.Commands.Categories
 {
@@ -9,7 +9,7 @@ namespace Northwind.Application.Commands.Categories
         public string CategoryName { get; }
         public string Description { get; }
 
-        public EditCategoryCommand(int categoryId, EditCategoryRequestDto request)
+        public EditCategoryCommand(int categoryId, CategoryDto request)
         {
             CategoryId = categoryId;
             CategoryName = request.CategoryName;
